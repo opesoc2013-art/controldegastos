@@ -2,7 +2,17 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="Anotá tus gastos por categoría y exportalos a Excel.">
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#161616">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gastos">
 <title>Contador de gastos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,12 +23,16 @@
     --oro-suave: #a8954f; --texto: #f5f5f5; --rojo: #ff5a4f;
   }
   * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   body {
     margin: 0; min-height: 100vh; background: var(--bg); color: var(--texto);
-    font-family: "Archivo", Arial, sans-serif; -webkit-tap-highlight-color: transparent;
+    font-family: "Archivo", Arial, sans-serif; font-size: 16px; -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
   }
-  main { max-width: 520px; margin: 0 auto; padding: 22px 16px 40px; }
+  button { touch-action: manipulation; }
+  main { max-width: 520px; margin: 0 auto;
+    padding: max(22px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+             max(32px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
   h1 {
     font-family: "Archivo Black", "Arial Black", sans-serif; font-size: clamp(2.2rem, 11vw, 3.1rem);
     line-height: 1.12; text-align: center; color: var(--oro); margin: 4px 0 22px;
@@ -26,7 +40,7 @@
   }
   form { display: grid; gap: 10px; }
   select, input {
-    width: 100%; min-height: 54px; background: var(--campo); color: var(--oro);
+    width: 100%; min-height: 58px; background: var(--campo); color: var(--oro);
     border: 1px solid var(--borde); border-radius: 8px; padding: 0 14px;
     font: 700 1.3rem "Archivo", Arial, sans-serif; outline: none;
   }
@@ -35,14 +49,14 @@
   input[type=number] { -moz-appearance: textfield; }
   input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .btn-add {
-    min-height: 54px; border: 0; border-radius: 8px; cursor: pointer; touch-action: manipulation;
+    min-height: 60px; border: 0; border-radius: 10px; cursor: pointer;
     background: linear-gradient(#ffe14d, var(--oro) 45%, var(--oro2));
     box-shadow: 0 5px 0 #6b5200; color: #fff; letter-spacing: 1px;
     font: 1.25rem "Archivo Black", "Arial Black", sans-serif; text-shadow: 2px 2px 2px rgba(0,0,0,.75);
     transition: transform .08s, box-shadow .08s;
   }
   .btn-add:active { transform: translateY(4px); box-shadow: 0 1px 0 #6b5200; }
-  .error { min-height: 1.2em; margin: 2px 2px 0; color: var(--rojo); font-weight: 700; font-size: .95rem; }
+  .error { min-height: 1.2em; margin: 2px 2px 0; color: var(--rojo); font-weight: 700; font-size: 1rem; }
 
   .vacio {
     text-align: center; color: #8a7400; font: 1.25rem "Archivo Black", "Arial Black", sans-serif;
@@ -54,46 +68,47 @@
     background: #0d0d0d; border: 1px solid #262626; border-radius: 8px; padding: 10px 10px 10px 14px;
   }
   .det { min-width: 0; }
-  .cat { display: inline-block; font-size: .78rem; font-weight: 700; color: #111; background: var(--oro);
+  .cat { display: inline-block; font-size: .85rem; font-weight: 700; color: #111; background: var(--oro);
          border-radius: 4px; padding: 1px 7px; margin-bottom: 3px; }
-  .desc { font-weight: 700; font-size: 1.05rem; overflow-wrap: anywhere; }
-  .fecha { font-size: .8rem; color: #8b8b8b; }
+  .desc { font-weight: 700; font-size: 1.1rem; overflow-wrap: anywhere; }
+  .fecha { font-size: .9rem; color: #9a9a9a; }
   .monto { font: 1.1rem "Archivo Black", "Arial Black", sans-serif; color: var(--oro); white-space: nowrap; }
   .borrar {
-    width: 44px; height: 44px; border-radius: 8px; border: 1px solid #3a3a3a; background: transparent;
-    color: #bbb; font-size: 1.2rem; cursor: pointer; touch-action: manipulation;
+    width: 48px; height: 48px; border-radius: 10px; border: 1px solid #3a3a3a; background: transparent;
+    color: #bbb; font-size: 1.25rem; cursor: pointer;
   }
   .borrar:active { background: #2a1210; color: var(--rojo); }
 
   .resumen { margin: 4px 0 6px; display: grid; gap: 7px; }
-  .resumen h2 { font: 1rem "Archivo Black", "Arial Black", sans-serif; color: var(--oro); margin: 0 0 2px; letter-spacing: .5px; }
-  .fila { display: grid; grid-template-columns: 96px 1fr auto; align-items: center; gap: 8px; font-size: .92rem; font-weight: 700; }
-  .barra { height: 10px; background: #262626; border-radius: 5px; overflow: hidden; }
+  .resumen h2 { font: 1.05rem "Archivo Black", "Arial Black", sans-serif; color: var(--oro); margin: 0 0 2px; letter-spacing: .5px; }
+  .fila { display: grid; grid-template-columns: 100px 1fr; align-items: center; gap: 4px 10px; font-size: 1rem; font-weight: 700; }
+  .fila .val { grid-column: 1 / -1; text-align: right; color: #ccc; font-size: .95rem; margin-top: -2px; }
+  .barra { height: 12px; background: #262626; border-radius: 5px; overflow: hidden; }
   .barra span { display: block; height: 100%; background: var(--oro); border-radius: 5px; }
 
   hr { border: 0; border-top: 2px solid #3a3a3a; margin: 18px 0 14px; }
   .total { display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
            font: clamp(1.9rem, 9vw, 2.4rem) "Archivo Black", "Arial Black", sans-serif; color: var(--oro);
            text-shadow: 3px 3px 0 #6b5200; }
-  .pie { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 18px; font-size: .85rem; color: #8b8b8b; }
+  .pie { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 18px; font-size: .95rem; color: #9a9a9a; }
   .btn-sec { background: transparent; color: #bbb; border: 1px solid #3a3a3a; border-radius: 8px;
-             min-height: 44px; padding: 0 14px; font: 700 .95rem "Archivo", Arial, sans-serif; cursor: pointer; }
+             min-height: 48px; padding: 0 16px; font: 700 1rem "Archivo", Arial, sans-serif; cursor: pointer; }
   .btn-excel {
-    width: 100%; min-height: 52px; margin-top: 18px; border-radius: 8px; cursor: pointer; touch-action: manipulation;
+    width: 100%; min-height: 58px; margin-top: 18px; border-radius: 10px; cursor: pointer;
     background: #0d0d0d; color: var(--oro); border: 2px solid var(--oro); letter-spacing: 1px;
-    font: 1.05rem "Archivo Black", "Arial Black", sans-serif;
+    font: 1.1rem "Archivo Black", "Arial Black", sans-serif;
   }
   .btn-excel:active { background: #2a2300; }
   .btn-excel:disabled { opacity: .6; cursor: wait; }
-  .aviso { min-height: 1.1em; margin: 6px 2px 0; font-size: .9rem; font-weight: 700; color: #bbb; }
+  .aviso { min-height: 1.1em; margin: 6px 2px 0; font-size: 1rem; font-weight: 700; color: #bbb; }
   .firma { margin: 26px 4px 0; text-align: right; font: 2.1rem "Great Vibes", "Brush Script MT", cursive;
            color: var(--oro); transform: rotate(-4deg); text-shadow: 2px 2px 0 #4a3900; user-select: none; }
   .confirmar { display: none; margin-top: 12px; padding: 12px; border: 1px solid #5a2420; border-radius: 8px; background: #1d0f0e; }
   .confirmar.on { display: block; }
-  .confirmar p { margin: 0 0 10px; font-weight: 700; }
-  .confirmar .acciones { display: flex; gap: 8px; }
-  .btn-peligro { background: var(--rojo); color: #fff; border: 0; border-radius: 8px; min-height: 44px; padding: 0 16px;
-                 font: 700 .95rem "Archivo", Arial, sans-serif; cursor: pointer; }
+  .confirmar p { margin: 0 0 10px; font-weight: 700; font-size: 1.05rem; }
+  .confirmar .acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btn-peligro { background: var(--rojo); color: #fff; border: 0; border-radius: 8px; min-height: 52px; padding: 0 16px;
+                 font: 700 1rem "Archivo", Arial, sans-serif; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -144,13 +159,13 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-  const $ = (id) => document.getElementById(id);
+  const $ =(id) => document.getElementById(id);
   const fmt = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const pesos = (n) => "$ " + fmt.format(Math.round(n * 100) / 100);
   const fechaCorta = (ts) => new Date(ts).toLocaleDateString("es-AR", { day: "numeric", month: "short" });
 
   let gastos = [];          // {id, cat, desc, monto, ts}
-  let coleccion = null;     // solo se usa dentro de Claude (guardado en la cuenta)
+  let coleccion = null;     // colección privada en la base de datos del artifact
   const LS = "contador-gastos-v1";
 
   // ---------- Dibujar ----------
@@ -192,14 +207,14 @@
       const pct = total ? Math.round((m / total) * 100) : 0;
       const fila = document.createElement("div");
       fila.className = "fila";
-      fila.innerHTML = `<span></span><div class="barra"><span style="width:${pct}%"></span></div><span></span>`;
+      fila.innerHTML = `<span></span><div class="barra"><span style="width:${pct}%"></span></div><span class="val"></span>`;
       fila.children[0].textContent = c;
       fila.children[2].textContent = pesos(m) + " · " + pct + "%";
       res.appendChild(fila);
     }
   }
 
-  // ---------- Guardado en el navegador ----------
+  // ---------- Guardado local (respaldo) ----------
   function leerLocal() {
     try { return JSON.parse(localStorage.getItem(LS) || "[]"); } catch { return []; }
   }
@@ -336,7 +351,6 @@
     $("estado").textContent = "Guardado en este navegador";
   }
 
-  // Dentro de Claude, guarda en la cuenta; afuera, en el navegador
   (async () => {
     if (!window.claude || !window.claude.use) return;
     try {
@@ -368,6 +382,13 @@
       coleccion = null;
     }
   })();
+
+  // Service worker: permite instalar la app y usarla sin conexión
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
 </script>
 </body>
 </html>
