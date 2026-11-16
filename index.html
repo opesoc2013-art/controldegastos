@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contador de gastos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@500;700&family=Great+Vibes&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #161616; --campo: #050505; --borde: #333; --oro: #ffd000; --oro2: #f2b705;
+    --oro-suave: #a8954f; --texto: #f5f5f5; --rojo: #ff5a4f;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--bg); color: var(--texto);
+    font-family: "Archivo", Arial, sans-serif; -webkit-tap-highlight-color: transparent;
+  }
+  main { max-width: 520px; margin: 0 auto; padding: 22px 16px 40px; }
+  h1 {
+    font-family: "Archivo Black", "Arial Black", sans-serif; font-size: clamp(2.2rem, 11vw, 3.1rem);
+    line-height: 1.12; text-align: center; color: var(--oro); margin: 4px 0 22px;
+    text-shadow: 3px 3px 0 #6b5200; letter-spacing: .5px;
+  }
+  form { display: grid; gap: 10px; }
+  select, input {
+    width: 100%; min-height: 54px; background: var(--campo); color: var(--oro);
+    border: 1px solid var(--borde); border-radius: 8px; padding: 0 14px;
+    font: 700 1.3rem "Archivo", Arial, sans-serif; outline: none;
+  }
+  input::placeholder { color: var(--oro-suave); opacity: 1; }
+  select:focus, input:focus { border-color: var(--oro); box-shadow: 0 0 0 2px rgba(255,208,0,.25); }
+  input[type=number] { -moz-appearance: textfield; }
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .btn-add {
+    min-height: 54px; border: 0; border-radius: 8px; cursor: pointer; touch-action: manipulation;
+    background: linear-gradient(#ffe14d, var(--oro) 45%, var(--oro2));
+    box-shadow: 0 5px 0 #6b5200; color: #fff; letter-spacing: 1px;
+    font: 1.25rem "Archivo Black", "Arial Black", sans-serif; text-shadow: 2px 2px 2px rgba(0,0,0,.75);
+    transition: transform .08s, box-shadow .08s;
+  }
+  .btn-add:active { transform: translateY(4px); box-shadow: 0 1px 0 #6b5200; }
+  .error { min-height: 1.2em; margin: 2px 2px 0; color: var(--rojo); font-weight: 700; font-size: .95rem; }
+
+  .vacio {
+    text-align: center; color: #8a7400; font: 1.25rem "Archivo Black", "Arial Black", sans-serif;
+    margin: 46px 0 40px; text-shadow: 2px 2px 0 #2a2200;
+  }
+  ul { list-style: none; padding: 0; margin: 22px 0 18px; display: grid; gap: 8px; }
+  li {
+    display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 10px;
+    background: #0d0d0d; border: 1px solid #262626; border-radius: 8px; padding: 10px 10px 10px 14px;
+  }
+  .det { min-width: 0; }
+  .cat { display: inline-block; font-size: .78rem; font-weight: 700; color: #111; background: var(--oro);
+         border-radius: 4px; padding: 1px 7px; margin-bottom: 3px; }
+  .desc { font-weight: 700; font-size: 1.05rem; overflow-wrap: anywhere; }
+  .fecha { font-size: .8rem; color: #8b8b8b; }
+  .monto { font: 1.1rem "Archivo Black", "Arial Black", sans-serif; color: var(--oro); white-space: nowrap; }
+  .borrar {
+    width: 44px; height: 44px; border-radius: 8px; border: 1px solid #3a3a3a; background: transparent;
+    color: #bbb; font-size: 1.2rem; cursor: pointer; touch-action: manipulation;
+  }
+  .borrar:active { background: #2a1210; color: var(--rojo); }
+
+  .resumen { margin: 4px 0 6px; display: grid; gap: 7px; }
+  .resumen h2 { font: 1rem "Archivo Black", "Arial Black", sans-serif; color: var(--oro); margin: 0 0 2px; letter-spacing: .5px; }
+  .fila { display: grid; grid-template-columns: 96px 1fr auto; align-items: center; gap: 8px; font-size: .92rem; font-weight: 700; }
+  .barra { height: 10px; background: #262626; border-radius: 5px; overflow: hidden; }
+  .barra span { display: block; height: 100%; background: var(--oro); border-radius: 5px; }
+
+  hr { border: 0; border-top: 2px solid #3a3a3a; margin: 18px 0 14px; }
+  .total { display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+           font: clamp(1.9rem, 9vw, 2.4rem) "Archivo Black", "Arial Black", sans-serif; color: var(--oro);
+           text-shadow: 3px 3px 0 #6b5200; }
+  .pie { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 18px; font-size: .85rem; color: #8b8b8b; }
+  .btn-sec { background: transparent; color: #bbb; border: 1px solid #3a3a3a; border-radius: 8px;
+             min-height: 44px; padding: 0 14px; font: 700 .95rem "Archivo", Arial, sans-serif; cursor: pointer; }
+  .btn-excel {
+    width: 100%; min-height: 52px; margin-top: 18px; border-radius: 8px; cursor: pointer; touch-action: manipulation;
+    background: #0d0d0d; color: var(--oro); border: 2px solid var(--oro); letter-spacing: 1px;
+    font: 1.05rem "Archivo Black", "Arial Black", sans-serif;
+  }
+  .btn-excel:active { background: #2a2300; }
+  .btn-excel:disabled { opacity: .6; cursor: wait; }
+  .aviso { min-height: 1.1em; margin: 6px 2px 0; font-size: .9rem; font-weight: 700; color: #bbb; }
+  .firma { margin: 26px 4px 0; text-align: right; font: 2.1rem "Great Vibes", "Brush Script MT", cursive;
+           color: var(--oro); transform: rotate(-4deg); text-shadow: 2px 2px 0 #4a3900; user-select: none; }
+  .confirmar { display: none; margin-top: 12px; padding: 12px; border: 1px solid #5a2420; border-radius: 8px; background: #1d0f0e; }
+  .confirmar.on { display: block; }
+  .confirmar p { margin: 0 0 10px; font-weight: 700; }
+  .confirmar .acciones { display: flex; gap: 8px; }
+  .btn-peligro { background: var(--rojo); color: #fff; border: 0; border-radius: 8px; min-height: 44px; padding: 0 16px;
+                 font: 700 .95rem "Archivo", Arial, sans-serif; cursor: pointer; }
+</style>
+</head>
+<body>
+<main>
+  <h1>CONTADOR DE GASTOS</h1>
+
+  <form id="form" novalidate>
+    <select id="cat" aria-label="Categoría">
+      <option>Comida</option>
+      <option>Transporte</option>
+      <option>Hogar</option>
+      <option>Servicios</option>
+      <option>Salud</option>
+      <option>Ocio</option>
+      <option>Ropa</option>
+      <option>Otros</option>
+    </select>
+    <input id="desc" type="text" placeholder="Descripción" maxlength="80" autocomplete="off">
+    <input id="monto" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Cantidad ($)">
+    <button class="btn-add" type="submit">AÑADIR GASTO</button>
+    <p class="error" id="error" role="alert"></p>
+  </form>
+
+  <p class="vacio" id="vacio">Todavía no hay gastos.</p>
+  <ul id="lista"></ul>
+  <section class="resumen" id="resumen" hidden></section>
+
+  <hr>
+  <div class="total"><span>Total</span><span id="total">$ 0,00</span></div>
+
+  <button class="btn-excel" id="btnExcel" type="button" hidden>⬇ GUARDAR COMO EXCEL</button>
+  <p class="aviso" id="avisoExcel" role="status"></p>
+
+  <div class="pie">
+    <span id="estado">Cargando…</span>
+    <button class="btn-sec" id="btnBorrarTodo" type="button" hidden>Borrar todo</button>
+  </div>
+  <div class="confirmar" id="confirmar">
+    <p>¿Borrar todos los gastos? No se puede deshacer.</p>
+    <div class="acciones">
+      <button class="btn-peligro" id="siBorrar" type="button">Sí, borrar</button>
+      <button class="btn-sec" id="noBorrar" type="button">Cancelar</button>
+    </div>
+  </div>
+
+  <p class="firma">By Diego Ferreyra</p>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const fmt = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const pesos = (n) => "$ " + fmt.format(Math.round(n * 100) / 100);
+  const fechaCorta = (ts) => new Date(ts).toLocaleDateString("es-AR", { day: "numeric", month: "short" });
+
+  let gastos = [];          // {id, cat, desc, monto, ts}
+  let coleccion = null;     // solo se usa dentro de Claude (guardado en la cuenta)
+  const LS = "contador-gastos-v1";
+
+  // ---------- Dibujar ----------
+  function render() {
+    const lista = $("lista");
+    lista.innerHTML = "";
+    const orden = [...gastos].sort((a, b) => b.ts - a.ts);
+    for (const g of orden) {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <div class="det">
+          <span class="cat"></span>
+          <div class="desc"></div>
+          <div class="fecha"></div>
+        </div>
+        <div class="monto"></div>
+        <button class="borrar" type="button" aria-label="Borrar gasto">✕</button>`;
+      li.querySelector(".cat").textContent = g.cat;
+      li.querySelector(".desc").textContent = g.desc;
+      li.querySelector(".fecha").textContent = fechaCorta(g.ts);
+      li.querySelector(".monto").textContent = pesos(g.monto);
+      li.querySelector(".borrar").addEventListener("click", () => borrar(g.id));
+      lista.appendChild(li);
+    }
+    const total = gastos.reduce((s, g) => s + g.monto, 0);
+    $("total").textContent = pesos(total);
+    $("vacio").hidden = gastos.length > 0;
+    $("btnBorrarTodo").hidden = gastos.length === 0;
+    $("btnExcel").hidden = gastos.length === 0;
+
+    // Resumen por categoría
+    const res = $("resumen");
+    const porCat = {};
+    for (const g of gastos) porCat[g.cat] = (porCat[g.cat] || 0) + g.monto;
+    const cats = Object.entries(porCat).sort((a, b) => b[1] - a[1]);
+    res.hidden = cats.length < 2;
+    res.innerHTML = "<h2>POR CATEGORÍA</h2>";
+    for (const [c, m] of cats) {
+      const pct = total ? Math.round((m / total) * 100) : 0;
+      const fila = document.createElement("div");
+      fila.className = "fila";
+      fila.innerHTML = `<span></span><div class="barra"><span style="width:${pct}%"></span></div><span></span>`;
+      fila.children[0].textContent = c;
+      fila.children[2].textContent = pesos(m) + " · " + pct + "%";
+      res.appendChild(fila);
+    }
+  }
+
+  // ---------- Guardado en el navegador ----------
+  function leerLocal() {
+    try { return JSON.parse(localStorage.getItem(LS) || "[]"); } catch { return []; }
+  }
+  function guardarLocal() {
+    try { localStorage.setItem(LS, JSON.stringify(gastos)); } catch {}
+  }
+
+  // ---------- Acciones ----------
+  async function agregar(e) {
+    e.preventDefault();
+    const cat = $("cat").value;
+    const desc = $("desc").value.trim();
+    const monto = parseFloat(String($("monto").value).replace(",", "."));
+    if (!desc) { $("error").textContent = "Escribí una descripción."; $("desc").focus(); return; }
+    if (!isFinite(monto) || monto <= 0) { $("error").textContent = "Ingresá una cantidad mayor a 0."; $("monto").focus(); return; }
+
+    const g = { id: "g" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+                cat, desc, monto: Math.round(monto * 100) / 100, ts: Date.now() };
+    $("desc").value = ""; $("monto").value = ""; $("desc").focus();
+
+    if (coleccion) {
+      try { await coleccion.doc(g.id).set({ cat: g.cat, desc: g.desc, monto: g.monto, ts: g.ts }); }
+      catch (err) { avisoError(err); }
+    } else {
+      gastos.push(g); guardarLocal(); render();
+    }
+  }
+
+  async function borrar(id) {
+    if (coleccion) {
+      try { await coleccion.doc(id).delete(); } catch (err) { avisoError(err); }
+    } else {
+      gastos = gastos.filter((g) => g.id !== id); guardarLocal(); render();
+    }
+  }
+
+  async function borrarTodo() {
+    $("confirmar").classList.remove("on");
+    if (coleccion) {
+      for (const g of [...gastos]) {
+        try { await coleccion.doc(g.id).delete(); } catch (err) { avisoError(err); break; }
+      }
+    } else {
+      gastos = []; guardarLocal(); render();
+    }
+  }
+
+  function avisoError(err) {
+    const code = err && err.code;
+    $("error").textContent = code === "quota_exceeded"
+      ? "Se llenó el espacio de guardado. Borrá algunos gastos."
+      : "No se pudo guardar. Probá de nuevo en un momento.";
+  }
+
+  // ---------- Exportar a Excel ----------
+  function armarExcel() {
+    const orden = [...gastos].sort((a, b) => a.ts - b.ts);
+    const FMT_PESOS = '"$" #,##0.00';
+    const filas = [["Fecha", "Categoría", "Descripción", "Monto ($)"]];
+    for (const g of orden) filas.push([new Date(g.ts), g.cat, g.desc, g.monto]);
+    const ws = XLSX.utils.aoa_to_sheet(filas, { cellDates: true });
+    const n = orden.length;
+    for (let r = 1; r <= n; r++) {
+      ws[XLSX.utils.encode_cell({ r, c: 0 })].z = "dd/mm/yyyy";
+      ws[XLSX.utils.encode_cell({ r, c: 3 })].z = FMT_PESOS;
+    }
+    const filaTotal = n + 1;
+    XLSX.utils.sheet_add_aoa(ws, [["", "", "TOTAL", { f: `SUM(D2:D${n + 1})` }]], { origin: filaTotal });
+    ws[XLSX.utils.encode_cell({ r: filaTotal, c: 3 })].z = FMT_PESOS;
+    ws["!cols"] = [{ wch: 12 }, { wch: 14 }, { wch: 34 }, { wch: 16 }];
+
+    const porCat = {};
+    for (const g of gastos) porCat[g.cat] = (porCat[g.cat] || 0) + g.monto;
+    const cats = Object.entries(porCat).sort((a, b) => b[1] - a[1]);
+    const ws2 = XLSX.utils.aoa_to_sheet([["Categoría", "Total ($)", "% del total"], ...cats.map(([c, m]) => [c, m])]);
+    const k = cats.length;
+    for (let r = 1; r <= k; r++) {
+      ws2[XLSX.utils.encode_cell({ r, c: 1 })].z = FMT_PESOS;
+      XLSX.utils.sheet_add_aoa(ws2, [[{ f: `B${r + 1}/SUM($B$2:$B$${k + 1})` }]], { origin: { r, c: 2 } });
+      ws2[XLSX.utils.encode_cell({ r, c: 2 })].z = "0%";
+    }
+    ws2["!cols"] = [{ wch: 14 }, { wch: 16 }, { wch: 12 }];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Gastos");
+    XLSX.utils.book_append_sheet(wb, ws2, "Por categoría");
+    return XLSX.write(wb, { type: "array", bookType: "xlsx" });
+  }
+
+  async function guardarExcel() {
+    const aviso = $("avisoExcel");
+    if (!window.XLSX) { aviso.textContent = "No se pudo preparar el Excel. Revisá la conexión a internet."; return; }
+    const btn = $("btnExcel");
+    btn.disabled = true; aviso.textContent = "";
+    const hoy = new Date().toISOString().slice(0, 10);
+    const nombre = `gastos-${hoy}.xlsx`;
+    try {
+      const datos = armarExcel();
+      const dl = (window.claude && window.claude.use) ? await claude.use("downloads") : null;
+      if (dl) {
+        try {
+          await dl.save({ filename: nombre, data: datos });
+          aviso.textContent = "Excel guardado.";
+        } catch (err) {
+          aviso.textContent = err && err.code === "declined" ? "" : "No se pudo guardar el Excel.";
+        }
+      } else {
+        const url = URL.createObjectURL(new Blob([datos], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+        const a = document.createElement("a");
+        a.href = url; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        aviso.textContent = "Excel descargado.";
+      }
+    } catch {
+      aviso.textContent = "No se pudo armar el Excel.";
+    } finally {
+      btn.disabled = false;
+    }
+  }
+  $("btnExcel").addEventListener("click", guardarExcel);
+
+  ["desc", "monto"].forEach((id) => $(id).addEventListener("input", () => ($("error").textContent = "")));
+  $("form").addEventListener("submit", agregar);
+  $("btnBorrarTodo").addEventListener("click", () => $("confirmar").classList.add("on"));
+  $("noBorrar").addEventListener("click", () => $("confirmar").classList.remove("on"));
+  $("siBorrar").addEventListener("click", borrarTodo);
+
+  // ---------- Arranque ----------
+  gastos = leerLocal();
+  render();
+  modoLocal();
+
+  function modoLocal() {
+    $("estado").textContent = "Guardado en este navegador";
+  }
+
+  // Dentro de Claude, guarda en la cuenta; afuera, en el navegador
+  (async () => {
+    if (!window.claude || !window.claude.use) return;
+    try {
+      const [db, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+      const uid = user ? await user.id() : null;
+      if (!db || !uid) return;
+      coleccion = db.collection("data/users/" + uid);
+      $("estado").textContent = "Cargando tus gastos…";
+      const timer = setTimeout(() => {
+        $("estado").textContent = "No se pudo conectar todavía; reintentando…";
+      }, 10000);
+      coleccion.onSnapshot((snap) => {
+        gastos = snap.docs.map((d) => {
+          const x = d.data() || {};
+          return { id: d.id, cat: String(x.cat || "Otros"), desc: String(x.desc || ""),
+                   monto: Number(x.monto) || 0, ts: Number(x.ts) || 0 };
+        });
+        render();
+        if (!snap.metadata.fromCache) {
+          clearTimeout(timer);
+          $("estado").textContent = "Guardado en tu cuenta";
+        }
+      }, () => {
+        clearTimeout(timer);
+        coleccion = null;
+        gastos = leerLocal(); render(); modoLocal();
+      });
+    } catch {
+      coleccion = null;
+    }
+  })();
+</script>
+</body>
+</html>
